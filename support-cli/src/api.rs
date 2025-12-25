@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use reqwest::blocking::Client;
+use reqwest::blocking::{multipart, Client};
 use support_common::{CreateCommentRequest, Ticket, TicketDetail, TicketState, UpdateStateRequest};
 
 pub struct ApiClient {
@@ -97,5 +97,30 @@ impl ApiClient {
         resp.bytes()
             .map(|b| b.to_vec())
             .context("Fehler beim Herunterladen")
+    }
+
+    pub fn create_ticket(&self, description: String, zip_data: Vec<u8>) -> Result<Ticket> {
+        let form = multipart::Form::new()
+            .text("description", description)
+            .part(
+                "zip",
+                multipart::Part::bytes(zip_data)
+                    .file_name("report.zip")
+                    .mime_str("application/zip")?,
+            );
+
+        let resp = self
+            .client
+            .post(format!("{}/tickets", self.base_url))
+            .header("x-api-key", &self.api_key)
+            .multipart(form)
+            .send()
+            .context("Konnte Server nicht erreichen")?;
+
+        if !resp.status().is_success() {
+            anyhow::bail!("Server Fehler: {}", resp.status());
+        }
+
+        resp.json().context("Ungültige Antwort vom Server")
     }
 }

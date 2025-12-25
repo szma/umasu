@@ -82,6 +82,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
         View::ZipViewer => draw_zip_viewer(frame, app, chunks[0]),
         View::FileContent => draw_file_content(frame, app, chunks[0]),
         View::AddComment => draw_add_comment(frame, app, chunks[0]),
+        View::CreateTicket => draw_create_ticket(frame, app, chunks[0]),
     }
 
     draw_status_bar(frame, app, chunks[1]);
@@ -252,7 +253,7 @@ fn draw_add_comment(frame: &mut Frame, app: &App, area: Rect) {
     let input = Paragraph::new(app.comment_input.as_str())
         .block(
             Block::default()
-                .title(" Kommentar eingeben (Enter = Senden, Esc = Abbrechen) ")
+                .title(" Enter comment (Enter = Send, Esc = Cancel) ")
                 .borders(Borders::ALL),
         )
         .style(Style::default().fg(Color::Yellow));
@@ -265,20 +266,47 @@ fn draw_add_comment(frame: &mut Frame, app: &App, area: Rect) {
             detail.ticket.id,
             detail.ticket.description.lines().next().unwrap_or("")
         ))
-        .block(Block::default().title(" Kontext ").borders(Borders::ALL));
+        .block(Block::default().title(" Context ").borders(Borders::ALL));
         frame.render_widget(context, chunks[1]);
     }
 }
 
+fn draw_create_ticket(frame: &mut Frame, app: &App, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(5), Constraint::Min(0)])
+        .split(area);
+
+    let input = Paragraph::new(app.new_ticket_description.as_str())
+        .block(
+            Block::default()
+                .title(" New Ticket - Enter description (Enter = Create, Esc = Cancel) ")
+                .borders(Borders::ALL),
+        )
+        .style(Style::default().fg(Color::Yellow))
+        .wrap(Wrap { trim: false });
+    frame.render_widget(input, chunks[0]);
+
+    let help_text = vec![
+        Line::from("A minimal ZIP file will be created automatically."),
+        Line::from("Use this to report bugs from beta testers or for testing."),
+    ];
+    let help = Paragraph::new(help_text)
+        .block(Block::default().title(" Info ").borders(Borders::ALL))
+        .style(Style::default().fg(Color::DarkGray));
+    frame.render_widget(help, chunks[1]);
+}
+
 fn draw_status_bar(frame: &mut Frame, app: &App, area: Rect) {
     let help_text = match app.view {
-        View::TicketList => "↑/↓: Auswählen | Enter: Details | r: Aktualisieren | q: Beenden",
+        View::TicketList => "↑/↓: Select | Enter: Details | n: New ticket | r: Refresh | q: Quit",
         View::TicketDetail => {
-            "↑/↓: Scrollen | z: ZIP öffnen | c: Kommentar | 1/2/3: Status | Esc: Zurück"
+            "↑/↓: Scroll | z: Open ZIP | c: Comment | 1/2/3: Status | Esc: Back"
         }
-        View::ZipViewer => "↑/↓: Auswählen | Enter: Öffnen | Esc: Zurück",
-        View::FileContent => "↑/↓: Scrollen | Esc: Zurück",
-        View::AddComment => "Enter: Senden | Esc: Abbrechen",
+        View::ZipViewer => "↑/↓: Select | Enter: Open | Esc: Back",
+        View::FileContent => "↑/↓: Scroll | Esc: Back",
+        View::AddComment => "Enter: Send | Esc: Cancel",
+        View::CreateTicket => "Enter: Create | Esc: Cancel",
     };
 
     let status = if let Some(msg) = &app.status_message {

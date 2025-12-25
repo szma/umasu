@@ -1,8 +1,8 @@
-use std::io::Cursor;
+use std::io::{Cursor, Write};
 
 use anyhow::Result;
 use support_common::{Ticket, TicketDetail, TicketState};
-use zip::ZipArchive;
+use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 use crate::api::ApiClient;
 
@@ -13,6 +13,7 @@ pub enum View {
     ZipViewer,
     FileContent,
     AddComment,
+    CreateTicket,
 }
 
 #[derive(Debug, Clone)]
@@ -48,6 +49,9 @@ pub struct App {
     // Comment Input
     pub comment_input: String,
 
+    // Create Ticket Input
+    pub new_ticket_description: String,
+
     // Status/Error Message
     pub status_message: Option<String>,
 }
@@ -69,6 +73,7 @@ impl App {
             file_name: String::new(),
             content_scroll: 0,
             comment_input: String::new(),
+            new_ticket_description: String::new(),
             status_message: None,
         }
     }
@@ -165,11 +170,42 @@ impl App {
                 self.comment_input.clear();
                 // Reload ticket detail
                 self.load_ticket_detail(detail.ticket.id)?;
-                self.status_message = Some("Kommentar hinzugefügt".to_string());
+                self.status_message = Some("Comment added".to_string());
             }
         }
         self.view = View::TicketDetail;
         Ok(())
+    }
+
+    pub fn submit_new_ticket(&mut self) -> Result<()> {
+        if self.new_ticket_description.trim().is_empty() {
+            self.status_message = Some("Description cannot be empty".to_string());
+            return Ok(());
+        }
+
+        // Create minimal ZIP with the description as a text file
+        let zip_data = Self::create_minimal_zip(&self.new_ticket_description)?;
+
+        self.api
+            .create_ticket(self.new_ticket_description.clone(), zip_data)?;
+
+        self.new_ticket_description.clear();
+        self.load_tickets()?;
+        self.view = View::TicketList;
+        self.status_message = Some("Ticket created".to_string());
+        Ok(())
+    }
+
+    fn create_minimal_zip(description: &str) -> Result<Vec<u8>> {
+        let mut buffer = Cursor::new(Vec::new());
+        {
+            let mut zip = ZipWriter::new(&mut buffer);
+            let options = SimpleFileOptions::default();
+            zip.start_file("report.txt", options)?;
+            zip.write_all(description.as_bytes())?;
+            zip.finish()?;
+        }
+        Ok(buffer.into_inner())
     }
 
     pub fn move_selection(&mut self, delta: i32) {
@@ -216,6 +252,10 @@ impl App {
             View::AddComment => {
                 self.view = View::TicketDetail;
                 self.comment_input.clear();
+            }
+            View::CreateTicket => {
+                self.view = View::TicketList;
+                self.new_ticket_description.clear();
             }
             _ => {}
         }

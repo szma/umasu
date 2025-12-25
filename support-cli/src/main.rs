@@ -67,6 +67,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> 
                     View::ZipViewer => handle_zip_viewer_keys(app, key.code)?,
                     View::FileContent => handle_file_content_keys(app, key.code),
                     View::AddComment => handle_add_comment_keys(app, key.code)?,
+                    View::CreateTicket => handle_create_ticket_keys(app, key.code)?,
                 }
             }
         }
@@ -79,7 +80,10 @@ fn handle_ticket_list_keys(app: &mut App, code: KeyCode) -> Result<()> {
         KeyCode::Char('q') => app.running = false,
         KeyCode::Char('r') => {
             app.load_tickets()?;
-            app.status_message = Some("Tickets aktualisiert".to_string());
+            app.status_message = Some("Tickets refreshed".to_string());
+        }
+        KeyCode::Char('n') => {
+            app.view = View::CreateTicket;
         }
         KeyCode::Up | KeyCode::Char('k') => app.move_selection(-1),
         KeyCode::Down | KeyCode::Char('j') => app.move_selection(1),
@@ -153,6 +157,23 @@ fn handle_add_comment_keys(app: &mut App, code: KeyCode) -> Result<()> {
         }
         KeyCode::Char(c) => {
             app.comment_input.push(c);
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn handle_create_ticket_keys(app: &mut App, code: KeyCode) -> Result<()> {
+    match code {
+        KeyCode::Esc => app.go_back(),
+        KeyCode::Enter => {
+            app.submit_new_ticket()?;
+        }
+        KeyCode::Backspace => {
+            app.new_ticket_description.pop();
+        }
+        KeyCode::Char(c) => {
+            app.new_ticket_description.push(c);
         }
         _ => {}
     }
