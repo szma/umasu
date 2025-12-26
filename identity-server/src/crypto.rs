@@ -38,3 +38,35 @@ pub fn hash_key(key: &str) -> String {
     hasher.update(key.as_bytes());
     hex::encode(hasher.finalize())
 }
+
+/// Generated activation code with its components
+pub struct GeneratedActivationCode {
+    pub full_code: String,
+    pub prefix: String,
+    pub hash: String,
+}
+
+/// Generates an activation code in the format: ac_XXXX-XXXX-XXXX
+/// These are one-time use codes that can be exchanged for API keys
+pub fn generate_activation_code() -> GeneratedActivationCode {
+    let mut rng = rand::rng();
+
+    // Generate 3 groups of 4 chars each
+    let groups: Vec<String> = (0..3)
+        .map(|_| {
+            (0..4)
+                .map(|_| KEY_CHARS[rng.random_range(0..KEY_CHARS.len())] as char)
+                .collect()
+        })
+        .collect();
+
+    let full_code = format!("ac_{}-{}-{}", groups[0], groups[1], groups[2]);
+    let prefix = format!("ac_{}", groups[0]);
+    let hash = hash_key(&full_code);
+
+    GeneratedActivationCode {
+        full_code,
+        prefix,
+        hash,
+    }
+}

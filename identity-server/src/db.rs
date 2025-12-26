@@ -33,6 +33,20 @@ pub fn init_db(path: &str, encryption_key: &str) -> Result<DbPool> {
         CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON api_keys(key_prefix);
         CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+        -- Activation codes: one-time use codes that can be exchanged for API keys
+        CREATE TABLE IF NOT EXISTS activation_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code_hash TEXT NOT NULL UNIQUE,
+            code_prefix TEXT NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at INTEGER NOT NULL,
+            used_at INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_activation_codes_hash ON activation_codes(code_hash);
+        CREATE INDEX IF NOT EXISTS idx_activation_codes_prefix ON activation_codes(code_prefix);
         ",
     )?;
 

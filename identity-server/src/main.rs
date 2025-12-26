@@ -3,7 +3,7 @@ mod crypto;
 mod db;
 mod handlers;
 
-use axum::{routing::post, Router};
+use axum::{Router, routing::post};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -52,6 +52,13 @@ enum Command {
     ListKeys,
     /// Seed development data
     Seed,
+    /// Create an activation code for a user
+    CreateActivationCode {
+        #[arg(long)]
+        user_id: i64,
+    },
+    /// List all activation codes
+    ListActivationCodes,
 }
 
 #[tokio::main]
@@ -64,6 +71,7 @@ async fn main() {
         Some(Command::Serve { port }) => {
             let app = Router::new()
                 .route("/validate", post(handlers::validate))
+                .route("/activate", post(handlers::activate))
                 .with_state(db);
 
             let addr = format!("0.0.0.0:{}", port);
@@ -89,10 +97,17 @@ async fn main() {
         Some(Command::Seed) => {
             cli::seed_dev_data(&db).expect("Failed to seed data");
         }
+        Some(Command::CreateActivationCode { user_id }) => {
+            cli::create_activation_code(&db, user_id).expect("Failed to create activation code");
+        }
+        Some(Command::ListActivationCodes) => {
+            cli::list_activation_codes(&db).expect("Failed to list activation codes");
+        }
         None => {
             // Default to serve on port 3001
             let app = Router::new()
                 .route("/validate", post(handlers::validate))
+                .route("/activate", post(handlers::activate))
                 .with_state(db);
 
             println!("Identity server running on http://0.0.0.0:3001");
