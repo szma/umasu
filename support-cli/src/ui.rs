@@ -300,9 +300,7 @@ fn draw_create_ticket(frame: &mut Frame, app: &App, area: Rect) {
 fn draw_status_bar(frame: &mut Frame, app: &App, area: Rect) {
     let help_text = match app.view {
         View::TicketList => "↑/↓: Select | Enter: Details | n: New ticket | r: Refresh | q: Quit",
-        View::TicketDetail => {
-            "↑/↓: Scroll | z: Open ZIP | c: Comment | 1/2/3: Status | Esc: Back"
-        }
+        View::TicketDetail => "↑/↓: Scroll | z: Open ZIP | c: Comment | 1/2/3: Status | Esc: Back",
         View::ZipViewer => "↑/↓: Select | Enter: Open | Esc: Back",
         View::FileContent => "↑/↓: Scroll | Esc: Back",
         View::AddComment => "Enter: Send | Esc: Cancel",

@@ -97,7 +97,7 @@ pub fn seed_db(pool: &DbPool) -> Result<()> {
         "INSERT INTO comments (ticket_id, user_id, created_at, text) VALUES (?1, ?2, ?3, ?4)",
         (
             2,
-            100, // admin user
+            100,         // admin user
             now - 43200, // 12 hours ago
             "Wir schauen uns das Problem an. Könnten Sie bitte noch die App-Version angeben?",
         ),

@@ -1,14 +1,16 @@
 use axum::{
+    Json,
     body::Body,
     extract::{Path, State},
-    http::{header, StatusCode},
+    http::{StatusCode, header},
     response::Response,
-    Json,
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::auth::{AdminContext, AppState};
-use support_common::{Comment, CreateCommentRequest, Ticket, TicketDetail, TicketState, UpdateStateRequest};
+use support_common::{
+    Comment, CreateCommentRequest, Ticket, TicketDetail, TicketState, UpdateStateRequest,
+};
 
 pub async fn list_all_tickets(
     State(state): State<AppState>,
@@ -116,11 +118,9 @@ pub async fn add_comment(
 
     // Check ticket exists
     let exists: bool = conn
-        .query_row(
-            "SELECT 1 FROM tickets WHERE id = ?",
-            [ticket_id],
-            |_| Ok(true),
-        )
+        .query_row("SELECT 1 FROM tickets WHERE id = ?", [ticket_id], |_| {
+            Ok(true)
+        })
         .unwrap_or(false);
 
     if !exists {

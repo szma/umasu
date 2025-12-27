@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use reqwest::blocking::{multipart, Client};
+use reqwest::blocking::{Client, multipart};
 use support_common::{CreateCommentRequest, Ticket, TicketDetail, TicketState, UpdateStateRequest};
 
 pub struct ApiClient {

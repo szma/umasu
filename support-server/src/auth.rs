@@ -1,6 +1,6 @@
 use axum::{
     extract::FromRequestParts,
-    http::{request::Parts, StatusCode},
+    http::{StatusCode, request::Parts},
 };
 use serde::{Deserialize, Serialize};
 
@@ -101,7 +101,12 @@ where
             .identity
             .validate(api_key)
             .await
-            .map_err(|_| (StatusCode::SERVICE_UNAVAILABLE, "Identity service unavailable"))?
+            .map_err(|_| {
+                (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "Identity service unavailable",
+                )
+            })?
             .ok_or((StatusCode::UNAUTHORIZED, "Invalid API key"))?;
 
         Ok(UserContext {

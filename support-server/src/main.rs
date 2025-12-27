@@ -3,8 +3,8 @@ mod db;
 mod handlers;
 
 use axum::{
-    routing::{get, post, put},
     Router,
+    routing::{get, post, put},
 };
 use clap::Parser;
 
@@ -23,7 +23,11 @@ struct Args {
     db_key: String,
 
     /// Identity service URL (or use IDENTITY_SERVICE_URL env var)
-    #[arg(long, env = "IDENTITY_SERVICE_URL", default_value = "http://localhost:3001")]
+    #[arg(
+        long,
+        env = "IDENTITY_SERVICE_URL",
+        default_value = "http://localhost:3001"
+    )]
     identity_url: String,
 
     /// Database file path
@@ -56,9 +60,18 @@ async fn main() {
     let admin_routes = Router::new()
         .route("/admin/tickets", get(handlers::admin::list_all_tickets))
         .route("/admin/tickets/{id}", get(handlers::admin::get_ticket))
-        .route("/admin/tickets/{id}/state", put(handlers::admin::update_state))
-        .route("/admin/tickets/{id}/comments", post(handlers::admin::add_comment))
-        .route("/admin/tickets/{id}/zip", get(handlers::admin::download_zip));
+        .route(
+            "/admin/tickets/{id}/state",
+            put(handlers::admin::update_state),
+        )
+        .route(
+            "/admin/tickets/{id}/comments",
+            post(handlers::admin::add_comment),
+        )
+        .route(
+            "/admin/tickets/{id}/zip",
+            get(handlers::admin::download_zip),
+        );
 
     let app = Router::new()
         .merge(user_routes)
