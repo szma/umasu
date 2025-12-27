@@ -1,3 +1,7 @@
 #!/bin/bash
 
-SUPPORT_DB_KEY="SUPP9562" cargo run --release --bin support-server
+set -a
+source .env
+set +a
+
+cargo run --release --bin support-server
